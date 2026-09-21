@@ -1,10 +1,10 @@
 import { serve } from '@hono/node-server';
 import { createApp } from './app.js';
+import { loadConfig } from './config.js';
 
-// TODO(phase 1): read the port from config.ts
-const port = Number(process.env.PORT ?? 3000);
+const config = loadConfig();
 
-const server = serve({ fetch: createApp().fetch, port }, (info) => {
+const server = serve({ fetch: createApp().fetch, port: config.port }, (info) => {
   console.log(`Billing API listening on http://localhost:${info.port}`);
 });
 
