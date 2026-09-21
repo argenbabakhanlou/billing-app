@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { compareDates, isValidIsoDate } from './lib/dates.js';
 import { toCents, type Cents } from './lib/money.js';
+import { isoDateSchema as isoDate, moneySchema as money } from './lib/schemas.js';
 import type { IsoDate } from './types/api.js';
-
-const isoDate = z.string().refine(isValidIsoDate, 'Expected a date in yyyy-mm-dd format');
-const money = z.string().regex(/^\d+\.\d{2}$/, 'Expected an amount like 10000.00');
 
 const envSchema = z
   .object({

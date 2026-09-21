@@ -2,7 +2,7 @@ import type { Money } from '../types/api.js';
 
 export type Cents = number;
 
-const MONEY_PATTERN = /^\d+\.\d{2}$/;
+export const MONEY_PATTERN = /^\d+\.\d{2}$/;
 const PERCENT_SCALE = 10_000n;
 
 export function toCents(amount: Money): Cents {
