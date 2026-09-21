@@ -50,14 +50,24 @@ describe('LedgerStore', () => {
     expect(store.get(8)).toBeUndefined();
   });
 
-  it('reset clears ledgers and the sync date', () => {
+  it('tracks the last synced and billed days', () => {
+    store.markSynced('2022-01-05');
+    store.markBilled('2022-01-06');
+
+    expect(store.lastSyncedOn).toBe('2022-01-05');
+    expect(store.lastBilledOn).toBe('2022-01-06');
+  });
+
+  it('reset clears ledgers and the tracked days', () => {
     store.add(makeAdvance());
     store.markSynced('2022-01-05');
+    store.markBilled('2022-01-05');
 
     store.reset();
 
     expect(store.all()).toEqual([]);
     expect(store.lastSyncedOn).toBeUndefined();
+    expect(store.lastBilledOn).toBeUndefined();
   });
 });
 

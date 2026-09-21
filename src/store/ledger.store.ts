@@ -23,7 +23,6 @@ export function outstandingCents(ledger: AdvanceLedger): Cents {
   return ledger.totalOwedCents - ledger.repaidCents;
 }
 
-// Revenue share accrued but not yet collected, never more than what is still owed.
 export function dueCents(ledger: AdvanceLedger): Cents {
   return Math.min(ledger.accruedCents, ledger.totalOwedCents) - ledger.repaidCents;
 }
@@ -37,6 +36,7 @@ export function ledgerStatus(ledger: AdvanceLedger, asOf: IsoDate | undefined): 
 export class LedgerStore {
   private readonly ledgers = new Map<number, AdvanceLedger>();
   private syncedOn?: IsoDate;
+  private billedOn?: IsoDate;
 
   get lastSyncedOn(): IsoDate | undefined {
     return this.syncedOn;
@@ -44,6 +44,14 @@ export class LedgerStore {
 
   markSynced(today: IsoDate): void {
     this.syncedOn = today;
+  }
+
+  get lastBilledOn(): IsoDate | undefined {
+    return this.billedOn;
+  }
+
+  markBilled(today: IsoDate): void {
+    this.billedOn = today;
   }
 
   has(advanceId: number): boolean {
@@ -77,5 +85,6 @@ export class LedgerStore {
   reset(): void {
     this.ledgers.clear();
     this.syncedOn = undefined;
+    this.billedOn = undefined;
   }
 }
