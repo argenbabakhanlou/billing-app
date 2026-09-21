@@ -1,9 +1,9 @@
 import { HTTPException } from 'hono/http-exception';
 import { describe, expect, it, vi } from 'vitest';
-import { createApp } from '../../src/app.js';
+import { createTestApp } from '../helpers/test-app.js';
 
 function appWithFailingRoutes() {
-  const app = createApp({ logRequests: false });
+  const app = createTestApp().app;
   app.get('/http-error', () => {
     throw new HTTPException(409, { message: 'Already running' });
   });
@@ -15,7 +15,7 @@ function appWithFailingRoutes() {
 
 describe('error handling', () => {
   it('returns a JSON 404 for unknown routes', async () => {
-    const res = await createApp({ logRequests: false }).request('/nope', {
+    const res = await createTestApp().app.request('/nope', {
       headers: { 'X-Request-Id': 'req-1' },
     });
 
