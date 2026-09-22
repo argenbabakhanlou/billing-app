@@ -1,5 +1,5 @@
-import { createLedger, remaining } from '../../../src/services/billing/ledger';
-import type { Advance } from '../../../src/types';
+import { createLedger, remaining } from './ledger';
+import type { Advance } from '../../types';
 
 const advance: Advance = {
   id: 1,

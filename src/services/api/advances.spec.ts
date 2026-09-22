@@ -1,5 +1,5 @@
-import { completeBilling, getAdvances } from '../../../src/services/api';
-import { lastCall, mockFetch } from '../../helpers/fetch';
+import { completeBilling, getAdvances } from './advances';
+import { lastCall, mockFetch } from '../../testing/fetch';
 
 afterEach(() => vi.unstubAllGlobals());
 

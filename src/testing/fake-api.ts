@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
-import type { BillingApi } from '../../src/services/api';
-import type { Advance, Cents, IsoDate } from '../../src/types';
-import { compareDates } from '../../src/utils';
+import type { BillingApi } from '../services/api';
+import type { Advance, Cents, IsoDate } from '../types';
+import { compareDates } from '../utils';
 
 interface Revenue {
   amount: Cents;

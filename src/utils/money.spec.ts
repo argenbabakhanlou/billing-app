@@ -1,4 +1,4 @@
-import { fromCents, percentOf, toCents } from '../../src/utils/money';
+import { fromCents, percentOf, toCents } from './money';
 
 describe('toCents', () => {
   it.each([

@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '../../src/config';
-import { ApiError, isUnavailable, request, requestJson } from '../../src/services/http';
-import { lastCall, mockFetch } from '../helpers/fetch';
+import { API_BASE_URL } from '../config';
+import { ApiError, isUnavailable, request, requestJson } from './http';
+import { lastCall, mockFetch } from '../testing/fetch';
 
 afterEach(() => vi.unstubAllGlobals());
 

@@ -1,4 +1,4 @@
-import { addDays, compareDates, dateRange } from '../../src/utils/dates';
+import { addDays, compareDates, dateRange } from './dates';
 
 describe('addDays', () => {
   it('adds and subtracts days', () => {

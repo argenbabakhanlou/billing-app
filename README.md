@@ -42,10 +42,12 @@ src/
       ledger.ts        in-memory state per advance, with subscribe()
       billing.ts       runBilling(today) — one day of billing
       simulation.ts    simulate() — loops runBilling over a date range
+  testing/             test helpers: fake fetch and fake API
   index.ts             public entry point
 scripts/simulate.ts    CLI
-tests/                 mirrors src/; helpers/ has a fake fetch and a fake API
 ```
+
+Tests sit next to the file they cover as `<filename>.spec.ts` (e.g. `utils/money.spec.ts`).
 
 ## How billing works
 
@@ -104,7 +106,7 @@ VITE_API_BASE_URL=/api
 
 Binding the ledger:
 
-```ts
+````ts
 // React
 const ledger = createLedger();
 const snapshot = useSyncExternalStore(ledger.subscribe, ledger.snapshot);
@@ -114,7 +116,7 @@ Run a simulation from a view and show progress:
 
 ```ts
 await simulate({ deps: { api: billingApi, ledger }, onDay: (day) => days.push(day) });
-```
+````
 
 ## Known gaps / TODOs
 

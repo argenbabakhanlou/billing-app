@@ -1,5 +1,6 @@
-import { createLedger, simulate } from '../../../src/services/billing';
-import { createFakeApi, makeAdvance } from '../../helpers/fake-api';
+import { createLedger } from './ledger';
+import { simulate } from './simulation';
+import { createFakeApi, makeAdvance } from '../../testing/fake-api';
 
 describe('simulate', () => {
   it('runs billing for every day in the range, inclusive', async () => {

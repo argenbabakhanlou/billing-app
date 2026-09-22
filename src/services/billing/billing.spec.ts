@@ -1,7 +1,7 @@
-import { runBilling } from '../../../src/services/billing/billing';
-import { createLedger } from '../../../src/services/billing/ledger';
-import { dateRange } from '../../../src/utils';
-import { createFakeApi, makeAdvance } from '../../helpers/fake-api';
+import { runBilling } from './billing';
+import { createLedger } from './ledger';
+import { dateRange } from '../../utils';
+import { createFakeApi, makeAdvance } from '../../testing/fake-api';
 
 function setup() {
   const fake = createFakeApi();
