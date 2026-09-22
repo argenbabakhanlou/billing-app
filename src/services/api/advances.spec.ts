@@ -1,4 +1,4 @@
-import { completeBilling, getAdvances } from './advances';
+import { markBillingComplete, fetchAdvances } from './advances';
 import { lastCall, mockFetch } from '../../testing/fetch';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -14,11 +14,11 @@ const dto = {
   repayment_percentage: 60,
 };
 
-describe('getAdvances', () => {
+describe('fetchAdvances', () => {
   it('fetches and maps advances to the domain shape', async () => {
     const fetchMock = mockFetch(200, JSON.stringify({ advances: [dto] }));
 
-    await expect(getAdvances('2022-01-02')).resolves.toEqual([
+    await expect(fetchAdvances('2022-01-02')).resolves.toEqual([
       {
         id: 1,
         customerId: 1,
@@ -36,14 +36,14 @@ describe('getAdvances', () => {
 
   it('returns an empty list when there are no advances', async () => {
     mockFetch(200, '{"advances": []}');
-    await expect(getAdvances('2022-01-01')).resolves.toEqual([]);
+    await expect(fetchAdvances('2022-01-01')).resolves.toEqual([]);
   });
 });
 
-describe('completeBilling', () => {
+describe('markBillingComplete', () => {
   it('posts an empty body to billing_complete', async () => {
     const fetchMock = mockFetch(200, '');
-    await completeBilling(1, '2022-01-20');
+    await markBillingComplete(1, '2022-01-20');
 
     const { url, init } = lastCall(fetchMock);
     expect(url).toMatch(/\/advances\/1\/billing_complete$/);
@@ -53,6 +53,6 @@ describe('completeBilling', () => {
 
   it('throws on failure', async () => {
     mockFetch(500, 'boom');
-    await expect(completeBilling(1, '2022-01-20')).rejects.toMatchObject({ status: 500 });
+    await expect(markBillingComplete(1, '2022-01-20')).rejects.toMatchObject({ status: 500 });
   });
 });

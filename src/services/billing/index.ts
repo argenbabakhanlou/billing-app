@@ -1,3 +1,3 @@
-export { runBilling, type BillingDeps } from './billing';
-export { createLedger, remaining, type Ledger } from './ledger';
-export { simulate, type SimulationOptions } from './simulation';
+export { runDailyBilling, type BillingDeps } from './billing';
+export { createBillingLedger, remainingBalance, type Ledger } from './ledger';
+export { runSimulation, type SimulationOptions } from './simulation';

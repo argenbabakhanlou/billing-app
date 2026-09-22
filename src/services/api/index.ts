@@ -1,10 +1,10 @@
-import { completeBilling, getAdvances } from './advances';
-import { charge } from './mandates';
-import { getRevenue } from './revenues';
+import { markBillingComplete, fetchAdvances } from './advances';
+import { chargeMandate } from './mandates';
+import { fetchRevenue } from './revenues';
 
-export { charge, completeBilling, getAdvances, getRevenue };
-export { toAdvance } from './advances';
+export { chargeMandate, markBillingComplete, fetchAdvances, fetchRevenue };
+export { mapAdvanceDto } from './advances';
 
-export const billingApi = { getAdvances, getRevenue, charge, completeBilling };
+export const billingApi = { fetchAdvances, fetchRevenue, chargeMandate, markBillingComplete };
 
 export type BillingApi = typeof billingApi;

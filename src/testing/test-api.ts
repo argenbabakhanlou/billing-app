@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import type { BillingApi } from '../services/api';
 import type { Advance, Cents, IsoDate } from '../types';
-import { compareDates } from '../utils';
+import { compareIsoDates } from '../utils';
 
 interface Revenue {
   amount: Cents;
@@ -29,19 +29,19 @@ export function createFakeApi() {
   let defaultRevenue: Cents | null = null;
 
   const api = {
-    getAdvances: vi.fn(async (today: IsoDate) =>
-      advances.filter((advance) => compareDates(advance.created, today) <= 0),
+    fetchAdvances: vi.fn(async (today: IsoDate) =>
+      advances.filter((advance) => compareIsoDates(advance.created, today) <= 0),
     ),
-    getRevenue: vi.fn(async (customerId: number, forDate: IsoDate, today: IsoDate) => {
+    fetchRevenue: vi.fn(async (customerId: number, forDate: IsoDate, today: IsoDate) => {
       const revenue = revenues.get(`${customerId}:${forDate}`);
       if (!revenue) return defaultRevenue;
-      if (revenue.availableFrom && compareDates(today, revenue.availableFrom) < 0) return null;
+      if (revenue.availableFrom && compareIsoDates(today, revenue.availableFrom) < 0) return null;
       return revenue.amount;
     }),
-    charge: vi.fn(async (_mandateId: number, _amount: Cents, today: IsoDate) => {
+    chargeMandate: vi.fn(async (_mandateId: number, _amount: Cents, today: IsoDate) => {
       return !rejectedChargeDays.has(today);
     }),
-    completeBilling: vi.fn(async () => {}),
+    markBillingComplete: vi.fn(async () => {}),
   } satisfies BillingApi;
 
   return {
@@ -59,7 +59,7 @@ export function createFakeApi() {
       rejectedChargeDays.add(today);
     },
     chargedAmounts() {
-      return api.charge.mock.calls.map(([, amount, today]) => ({ today, amount }));
+      return api.chargeMandate.mock.calls.map(([, amount, today]) => ({ today, amount }));
     },
   };
 }

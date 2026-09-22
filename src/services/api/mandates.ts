@@ -1,14 +1,18 @@
 import type { Cents, ChargeRequest, IsoDate } from '../../types';
-import { fromCents } from '../../utils';
-import { isUnavailable, request } from '../http';
+import { formatAmount } from '../../utils';
+import { isUnavailableError, apiRequest } from '../http';
 
-export async function charge(mandateId: number, amount: Cents, today: IsoDate): Promise<boolean> {
-  const body: ChargeRequest = { amount: fromCents(amount) };
+export async function chargeMandate(
+  mandateId: number,
+  amount: Cents,
+  today: IsoDate,
+): Promise<boolean> {
+  const body: ChargeRequest = { amount: formatAmount(amount) };
   try {
-    await request('POST', `/mandates/${mandateId}/charge`, { today, body });
+    await apiRequest('POST', `/mandates/${mandateId}/charge`, { today, body });
     return true;
   } catch (error) {
-    if (isUnavailable(error)) return false;
+    if (isUnavailableError(error)) return false;
     throw error;
   }
 }

@@ -1,16 +1,16 @@
-import { createLedger } from './ledger';
-import { simulate } from './simulation';
-import { createFakeApi, makeAdvance } from '../../testing/fake-api';
+import { createBillingLedger } from './ledger';
+import { runSimulation } from './simulation';
+import { createFakeApi, makeAdvance } from '../../testing/test-api';
 
-describe('simulate', () => {
+describe('runSimulation', () => {
   it('runs billing for every day in the range, inclusive', async () => {
     const fake = createFakeApi();
     const onDay = vi.fn();
 
-    const { days } = await simulate({
+    const { days } = await runSimulation({
       from: '2022-01-01',
       to: '2022-01-05',
-      deps: { api: fake.api, ledger: createLedger() },
+      deps: { api: fake.api, ledger: createBillingLedger() },
       onDay,
     });
 
@@ -22,7 +22,7 @@ describe('simulate', () => {
       '2022-01-05',
     ]);
     expect(onDay).toHaveBeenCalledTimes(5);
-    expect(fake.api.getAdvances).toHaveBeenCalledTimes(5);
+    expect(fake.api.fetchAdvances).toHaveBeenCalledTimes(5);
   });
 
   it('bills an advance to completion over the period', async () => {
@@ -30,10 +30,10 @@ describe('simulate', () => {
     fake.addAdvance(makeAdvance({ totalAdvanced: 2500000, fee: 100000 }));
     fake.setDefaultRevenue(10000000);
 
-    const { ledger } = await simulate({
+    const { ledger } = await runSimulation({
       from: '2022-01-01',
       to: '2022-02-01',
-      deps: { api: fake.api, ledger: createLedger() },
+      deps: { api: fake.api, ledger: createBillingLedger() },
     });
 
     expect(ledger.get(1)).toMatchObject({ repaid: 2600000, completedOn: '2022-01-07' });

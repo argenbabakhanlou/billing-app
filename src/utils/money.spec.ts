@@ -1,6 +1,6 @@
-import { fromCents, percentOf, toCents } from './money';
+import { formatAmount, applyPercentage, parseAmount } from './money';
 
-describe('toCents', () => {
+describe('parseAmount', () => {
   it.each([
     ['12345.67', 1234567],
     ['0.00', 0],
@@ -9,49 +9,49 @@ describe('toCents', () => {
     ['10', 1000],
     ['60000.00', 6000000],
   ])('parses %s', (amount, cents) => {
-    expect(toCents(amount)).toBe(cents);
+    expect(parseAmount(amount)).toBe(cents);
   });
 
   it.each(['', 'abc', '-1.00', '1.234', '1,000.00', '.50'])('rejects %j', (amount) => {
-    expect(() => toCents(amount)).toThrow();
+    expect(() => parseAmount(amount)).toThrow();
   });
 });
 
-describe('fromCents', () => {
+describe('formatAmount', () => {
   it.each([
     [1234567, '12345.67'],
     [0, '0.00'],
     [5, '0.05'],
     [1000000, '10000.00'],
   ])('formats %d', (cents, amount) => {
-    expect(fromCents(cents)).toBe(amount);
+    expect(formatAmount(cents)).toBe(amount);
   });
 
   it.each([-1, 1.5, NaN])('rejects %d', (cents) => {
-    expect(() => fromCents(cents)).toThrow();
+    expect(() => formatAmount(cents)).toThrow();
   });
 
   it('round-trips', () => {
-    expect(fromCents(toCents('98765.43'))).toBe('98765.43');
+    expect(formatAmount(parseAmount('98765.43'))).toBe('98765.43');
   });
 });
 
-describe('percentOf', () => {
+describe('applyPercentage', () => {
   it('computes an exact percentage', () => {
-    expect(percentOf(100000, 11)).toBe(11000);
+    expect(applyPercentage(100000, 11)).toBe(11000);
   });
 
   it('rounds half up', () => {
-    expect(percentOf(50, 1)).toBe(1);
-    expect(percentOf(49, 1)).toBe(0);
-    expect(percentOf(123456, 11)).toBe(13580);
+    expect(applyPercentage(50, 1)).toBe(1);
+    expect(applyPercentage(49, 1)).toBe(0);
+    expect(applyPercentage(123456, 11)).toBe(13580);
   });
 
   it('handles zero revenue', () => {
-    expect(percentOf(0, 11)).toBe(0);
+    expect(applyPercentage(0, 11)).toBe(0);
   });
 
   it('rejects non-integer percentages', () => {
-    expect(() => percentOf(100, 1.5)).toThrow();
+    expect(() => applyPercentage(100, 1.5)).toThrow();
   });
 });

@@ -1,13 +1,13 @@
 import { API_BASE_URL } from '../config';
-import { ApiError, isUnavailable, request, requestJson } from './http';
+import { ApiError, isUnavailableError, apiRequest, apiRequestJson } from './http';
 import { lastCall, mockFetch } from '../testing/fetch';
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('request', () => {
+describe('apiRequest', () => {
   it('sends the Today header on GET without a body or content type', async () => {
     const fetchMock = mockFetch(200, 'ok');
-    await request('GET', '/advances', { today: '2022-01-02' });
+    await apiRequest('GET', '/advances', { today: '2022-01-02' });
 
     const { url, init, headers } = lastCall(fetchMock);
     expect(url).toBe(`${API_BASE_URL}/advances`);
@@ -18,7 +18,7 @@ describe('request', () => {
 
   it('sends JSON with a content type on POST', async () => {
     const fetchMock = mockFetch(200, 'Accepted');
-    const text = await request('POST', '/x', { today: '2022-01-02', body: { amount: '1.00' } });
+    const text = await apiRequest('POST', '/x', { today: '2022-01-02', body: { amount: '1.00' } });
 
     const { init, headers } = lastCall(fetchMock);
     expect(text).toBe('Accepted');
@@ -28,30 +28,30 @@ describe('request', () => {
 
   it('defaults the POST body to an empty object', async () => {
     const fetchMock = mockFetch(200, '');
-    await request('POST', '/x', { today: '2022-01-02' });
+    await apiRequest('POST', '/x', { today: '2022-01-02' });
     expect(lastCall(fetchMock).init.body).toBe('{}');
   });
 
   it('throws ApiError with status and body on failure', async () => {
     mockFetch(400, 'Revenue unavailable for future day');
-    const error = await request('GET', '/x', { today: '2022-01-02' }).catch((e: unknown) => e);
+    const error = await apiRequest('GET', '/x', { today: '2022-01-02' }).catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ status: 400, method: 'GET', path: '/x' });
-    expect(isUnavailable(error)).toBe(false);
+    expect(isUnavailableError(error)).toBe(false);
   });
 
   it('flags 530 as unavailable', async () => {
     mockFetch(530, '');
-    const error = await request('GET', '/x', { today: '2022-01-02' }).catch((e: unknown) => e);
-    expect(isUnavailable(error)).toBe(true);
+    const error = await apiRequest('GET', '/x', { today: '2022-01-02' }).catch((e: unknown) => e);
+    expect(isUnavailableError(error)).toBe(true);
   });
 });
 
-describe('requestJson', () => {
+describe('apiRequestJson', () => {
   it('parses JSON regardless of content type', async () => {
     mockFetch(200, '{"amount": "1.00"}');
-    await expect(requestJson('GET', '/x', { today: '2022-01-02' })).resolves.toEqual({
+    await expect(apiRequestJson('GET', '/x', { today: '2022-01-02' })).resolves.toEqual({
       amount: '1.00',
     });
   });

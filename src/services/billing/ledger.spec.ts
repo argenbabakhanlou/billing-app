@@ -1,4 +1,4 @@
-import { createLedger, remaining } from './ledger';
+import { createBillingLedger, remainingBalance } from './ledger';
 import type { Advance } from '../../types';
 
 const advance: Advance = {
@@ -13,7 +13,7 @@ const advance: Advance = {
 };
 
 function setup() {
-  const ledger = createLedger();
+  const ledger = createBillingLedger();
   ledger.register(advance);
   return ledger;
 }
@@ -22,7 +22,7 @@ describe('register', () => {
   it('creates an entry owing total plus fee', () => {
     const entry = setup().get(1)!;
     expect(entry).toMatchObject({ owed: 6250000, repaid: 0, due: 0, completedOn: null });
-    expect(remaining(entry)).toBe(6250000);
+    expect(remainingBalance(entry)).toBe(6250000);
   });
 
   it('ignores advances it already knows', () => {

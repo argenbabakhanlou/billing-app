@@ -1,9 +1,9 @@
 import type { Advance, Cents, IsoDate, LedgerEntry, LedgerSnapshot } from '../../types';
-import { compareDates } from '../../utils';
+import { compareIsoDates } from '../../utils';
 
-export type Ledger = ReturnType<typeof createLedger>;
+export type Ledger = ReturnType<typeof createBillingLedger>;
 
-export function remaining(entry: LedgerEntry): Cents {
+export function remainingBalance(entry: LedgerEntry): Cents {
   return entry.owed - entry.repaid;
 }
 
@@ -15,7 +15,7 @@ function copy(entry: LedgerEntry): LedgerEntry {
   };
 }
 
-export function createLedger() {
+export function createBillingLedger() {
   const entries = new Map<number, LedgerEntry>();
   const listeners = new Set<(snapshot: LedgerSnapshot) => void>();
   let cached: LedgerSnapshot | null = null;
@@ -50,7 +50,7 @@ export function createLedger() {
   function queueRevenueDate(id: number, date: IsoDate): boolean {
     const entry = entryFor(id);
     const last = entry.lastQueuedRevenueDate;
-    if (last && compareDates(date, last) <= 0) return false;
+    if (last && compareIsoDates(date, last) <= 0) return false;
     entry.pendingRevenueDates.push(date);
     entry.lastQueuedRevenueDate = date;
     changed();
@@ -68,7 +68,7 @@ export function createLedger() {
 
   function recordCharge(id: number, amount: Cents) {
     const entry = entryFor(id);
-    if (amount <= 0 || amount > remaining(entry)) {
+    if (amount <= 0 || amount > remainingBalance(entry)) {
       throw new Error(`Invalid charge of ${amount} for advance ${id}`);
     }
     entry.repaid += amount;
@@ -78,7 +78,7 @@ export function createLedger() {
 
   function markComplete(id: number, date: IsoDate) {
     const entry = entryFor(id);
-    if (remaining(entry) > 0) throw new Error(`Advance ${id} is not fully repaid`);
+    if (remainingBalance(entry) > 0) throw new Error(`Advance ${id} is not fully repaid`);
     entry.completedOn = date;
     entry.pendingRevenueDates = [];
     entry.due = 0;

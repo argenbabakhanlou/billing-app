@@ -15,17 +15,17 @@ function toIsoDate(ms: number): IsoDate {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
-export function addDays(date: IsoDate, days: number): IsoDate {
+export function shiftDate(date: IsoDate, days: number): IsoDate {
   return toIsoDate(toUtcMs(date) + days * MS_PER_DAY);
 }
 
-export function compareDates(a: IsoDate, b: IsoDate): number {
+export function compareIsoDates(a: IsoDate, b: IsoDate): number {
   return Math.sign(toUtcMs(a) - toUtcMs(b));
 }
 
-export function dateRange(from: IsoDate, to: IsoDate): IsoDate[] {
+export function eachDay(from: IsoDate, to: IsoDate): IsoDate[] {
   const dates: IsoDate[] = [];
-  for (let date = from; compareDates(date, to) <= 0; date = addDays(date, 1)) {
+  for (let date = from; compareIsoDates(date, to) <= 0; date = shiftDate(date, 1)) {
     dates.push(date);
   }
   return dates;

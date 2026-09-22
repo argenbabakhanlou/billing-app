@@ -1,20 +1,20 @@
-import { runBilling } from './billing';
-import { createLedger } from './ledger';
-import { dateRange } from '../../utils';
-import { createFakeApi, makeAdvance } from '../../testing/fake-api';
+import { runDailyBilling } from './billing';
+import { createBillingLedger } from './ledger';
+import { eachDay } from '../../utils';
+import { createFakeApi, makeAdvance } from '../../testing/test-api';
 
 function setup() {
   const fake = createFakeApi();
-  const ledger = createLedger();
+  const ledger = createBillingLedger();
   const deps = { api: fake.api, ledger };
-  const run = (today: string) => runBilling(today, deps);
+  const run = (today: string) => runDailyBilling(today, deps);
   const runDays = async (from: string, to: string) => {
-    for (const day of dateRange(from, to)) await run(day);
+    for (const day of eachDay(from, to)) await run(day);
   };
   return { fake, ledger, run, runDays };
 }
 
-describe('runBilling', () => {
+describe('runDailyBilling', () => {
   it('registers new advances once', async () => {
     const { fake, ledger, run } = setup();
     fake.addAdvance(makeAdvance());
@@ -32,8 +32,8 @@ describe('runBilling', () => {
     await runDays('2022-01-02', '2022-01-04');
     const summary = await run('2022-01-04');
 
-    expect(fake.api.getRevenue).not.toHaveBeenCalled();
-    expect(fake.api.charge).not.toHaveBeenCalled();
+    expect(fake.api.fetchRevenue).not.toHaveBeenCalled();
+    expect(fake.api.chargeMandate).not.toHaveBeenCalled();
     expect(summary.charges).toEqual([]);
   });
 
@@ -47,7 +47,7 @@ describe('runBilling', () => {
     const day1 = await run('2022-01-05');
     const day2 = await run('2022-01-06');
 
-    expect(fake.api.getRevenue).toHaveBeenCalledWith(1, '2022-01-04', '2022-01-05');
+    expect(fake.api.fetchRevenue).toHaveBeenCalledWith(1, '2022-01-04', '2022-01-05');
     expect(day1.charges).toEqual([{ advanceId: 1, mandateId: 10, amount: 10000, accepted: true }]);
     expect(day2.charges).toEqual([{ advanceId: 1, mandateId: 10, amount: 25000, accepted: true }]);
     expect(ledger.get(1)).toMatchObject({ repaid: 35000, due: 0 });
@@ -111,8 +111,8 @@ describe('runBilling', () => {
     await runDays('2022-01-09', '2022-01-12');
 
     expect(fake.chargedAmounts().map((c) => c.amount)).toEqual([10000, 10000, 5000]);
-    expect(fake.api.completeBilling).toHaveBeenCalledTimes(1);
-    expect(fake.api.completeBilling).toHaveBeenCalledWith(1, '2022-01-07');
+    expect(fake.api.markBillingComplete).toHaveBeenCalledTimes(1);
+    expect(fake.api.markBillingComplete).toHaveBeenCalledWith(1, '2022-01-07');
     expect(completedDay.charges).toEqual([]);
     expect(ledger.get(1)).toMatchObject({ repaid: 25000, completedOn: '2022-01-07' });
   });
@@ -126,9 +126,9 @@ describe('runBilling', () => {
 
     await runDays('2022-01-05', '2022-01-10');
 
-    expect(fake.api.getRevenue).toHaveBeenCalledTimes(2);
-    expect(fake.api.completeBilling).toHaveBeenCalledTimes(1);
-    expect(fake.api.completeBilling).toHaveBeenCalledWith(1, '2022-01-06');
+    expect(fake.api.fetchRevenue).toHaveBeenCalledTimes(2);
+    expect(fake.api.markBillingComplete).toHaveBeenCalledTimes(1);
+    expect(fake.api.markBillingComplete).toHaveBeenCalledWith(1, '2022-01-06');
   });
 
   it('picks up advances created mid-period', async () => {
@@ -151,7 +151,7 @@ describe('runBilling', () => {
     await run('2022-01-11');
     const day12 = await run('2022-01-12');
 
-    expect(fake.api.getRevenue).toHaveBeenCalledWith(1, '2022-01-11', '2022-01-12');
+    expect(fake.api.fetchRevenue).toHaveBeenCalledWith(1, '2022-01-11', '2022-01-12');
     expect(day12.charges.map((c) => c.advanceId)).toEqual([1, 2]);
   });
 
@@ -162,7 +162,7 @@ describe('runBilling', () => {
 
     const summary = await run('2022-01-07');
 
-    const requested = fake.api.getRevenue.mock.calls.map(([, forDate]) => forDate);
+    const requested = fake.api.fetchRevenue.mock.calls.map(([, forDate]) => forDate);
     expect(requested).toEqual(['2022-01-04', '2022-01-05', '2022-01-06']);
     expect(summary.charges.map((c) => c.amount)).toEqual([30000]);
   });

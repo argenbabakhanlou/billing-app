@@ -14,20 +14,20 @@ npm install
 cp .env.example .env
 ```
 
-`VITE_API_BASE_URL` in `.env` is required. `npm run simulate` fails if `.env` is missing or doesn't set it. Tests
+`VITE_API_BASE_URL` in `.env` is required. `npm run runSimulation` fails if `.env` is missing or doesn't set it. Tests
 don't need it; Vitest sets its own value.
 
 ## Scripts
 
-| Command             | What it does                                                       |
-| ------------------- | ------------------------------------------------------------------ |
-| `npm run simulate`  | Bills every day from 2022-01-01 to 2022-02-01 against the live API |
-| `npm test`          | Runs the Vitest suite                                              |
-| `npm run typecheck` | Runs `tsc --noEmit`                                                |
-| `npm run lint`      | Runs ESLint                                                        |
-| `npm run format`    | Runs Prettier                                                      |
+| Command                 | What it does                                                       |
+| ----------------------- | ------------------------------------------------------------------ |
+| `npm run runSimulation` | Bills every day from 2022-01-01 to 2022-02-01 against the live API |
+| `npm test`              | Runs the Vitest suite                                              |
+| `npm run typecheck`     | Runs `tsc --noEmit`                                                |
+| `npm run lint`          | Runs ESLint                                                        |
+| `npm run format`        | Runs Prettier                                                      |
 
-`npm run simulate` prints one line per day (new advances, charges accepted/attempted, revenue still pending,
+`npm run runSimulation` prints one line per day (new advances, charges accepted/attempted, revenue still pending,
 completions), then a table per advance and the overall totals.
 
 ## Structure
@@ -42,9 +42,9 @@ src/
     api/               one function per endpoint, plus a `billingApi` bundle
     billing/
       ledger.ts        in-memory state per advance, with subscribe()
-      billing.ts       runBilling(today) — one day of billing
-      simulation.ts    simulate() — loops runBilling over a date range
-  testing/             test helpers: fake fetch and fake API
+      billing.ts       runDailyBilling(today) — one day of billing
+      simulation.ts    runSimulation() — loops runDailyBilling over a date range
+  testing/             test helpers: fake fetch and test API
   index.ts             public entry point
 scripts/simulate.ts    CLI
 ```
@@ -53,14 +53,14 @@ Tests sit next to the file they cover as `<filename>.spec.ts` (e.g. `utils/money
 
 ## How billing works
 
-For each simulated day, `runBilling(today, { api, ledger })`:
+For each simulated day, `runDailyBilling(today, { api, ledger })`:
 
 1. Fetches advances and registers any it hasn't seen. Each one owes `total_advanced + fee`.
 2. For each advance that isn't complete and has reached its `repayment_start_date`:
    1. Queues every revenue date from the day before the start date up to yesterday that isn't queued yet.
    2. Fetches revenue for every pending date. A `530` leaves that date pending for tomorrow. Revenue that comes back
       adds `revenue × repayment_percentage / 100` to the amount due.
-   3. Charges `min(due, remaining, 10000.00)` against the mandate. A `530` leaves the amount due for tomorrow.
+   3. Charges `min(due, remainingBalance, 10000.00)` against the mandate. A `530` leaves the amount due for tomorrow.
    4. When nothing remains, calls `billing_complete` once and stops processing that advance.
 3. Returns a `DaySummary` of what happened.
 
@@ -74,9 +74,9 @@ For each simulated day, `runBilling(today, { api, ledger })`:
   exactly once, as soon as it's available.
 - **The 10,000.00 cap applies per advance, per day.** Each advance gets at most one charge a day, so the cap is simple
   to enforce. Anything above the cap carries forward.
-- **State is in memory.** `createLedger()` returns a store whose snapshot is cached until it changes, with
+- **State is in memory.** `createBillingLedger()` returns a store whose snapshot is cached until it changes, with
   `subscribe()`, so a UI can bind to it.
-- **Dependencies are injected.** `runBilling` and `simulate` take `{ api, ledger }`, so tests use a fake API and a UI
+- **Dependencies are injected.** `runDailyBilling` and `runSimulation` take `{ api, ledger }`, so tests use a test API and a UI
   could use a proxied one.
 - **Responses are read as text.** The API returns `text/html` for everything and charges return plain `Accepted`, so
   the HTTP layer parses JSON only where an endpoint returns it.
@@ -110,14 +110,14 @@ Binding the ledger:
 
 ````ts
 // React
-const ledger = createLedger();
+const ledger = createBillingLedger();
 const snapshot = useSyncExternalStore(ledger.subscribe, ledger.snapshot);
 
 
 Run a simulation from a view and show progress:
 
 ```ts
-await simulate({ deps: { api: billingApi, ledger }, onDay: (day) => days.push(day) });
+await runSimulation({ deps: { api: billingApi, ledger }, onDay: (day) => days.push(day) });
 ````
 
 ## Known gaps / TODOs
