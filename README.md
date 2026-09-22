@@ -11,9 +11,11 @@ Requires Node 20+ (`.nvmrc` pins 22).
 ```sh
 nvm use
 npm install
+cp .env.example .env
 ```
 
-The API base URL defaults to the live server. To override it, copy `.env.example` to `.env` or set `VITE_API_BASE_URL`.
+`VITE_API_BASE_URL` in `.env` is required. `npm run simulate` fails if `.env` is missing or doesn't set it. Tests
+don't need it; Vitest sets its own value.
 
 ## Scripts
 

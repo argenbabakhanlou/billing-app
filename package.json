@@ -13,7 +13,7 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "simulate": "tsx scripts/simulate.ts"
+    "simulate": "tsx --env-file=.env scripts/simulate.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
