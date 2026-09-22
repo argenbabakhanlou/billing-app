@@ -22,3 +22,23 @@ export interface LedgerSnapshot {
   entries: readonly LedgerEntry[];
   totals: LedgerTotals;
 }
+
+export interface ChargeAttempt {
+  advanceId: number;
+  mandateId: number;
+  amount: Cents;
+  accepted: boolean;
+}
+
+export interface PendingRevenue {
+  advanceId: number;
+  revenueDate: IsoDate;
+}
+
+export interface DaySummary {
+  date: IsoDate;
+  newAdvances: number[];
+  charges: ChargeAttempt[];
+  pendingRevenues: PendingRevenue[];
+  completed: number[];
+}
