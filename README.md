@@ -14,20 +14,20 @@ npm install
 cp .env.example .env
 ```
 
-`VITE_API_BASE_URL` in `.env` is required. `npm run runSimulation` fails if `.env` is missing or doesn't set it. Tests
+`VITE_API_BASE_URL` in `.env` is required. `npm run simulate` fails if `.env` is missing or doesn't set it. Tests
 don't need it; Vitest sets its own value.
 
 ## Scripts
 
-| Command                 | What it does                                                       |
-| ----------------------- | ------------------------------------------------------------------ |
-| `npm run runSimulation` | Bills every day from 2022-01-01 to 2022-02-01 against the live API |
-| `npm test`              | Runs the Vitest suite                                              |
-| `npm run typecheck`     | Runs `tsc --noEmit`                                                |
-| `npm run lint`          | Runs ESLint                                                        |
-| `npm run format`        | Runs Prettier                                                      |
+| Command             | What it does                                                       |
+| ------------------- | ------------------------------------------------------------------ |
+| `npm run simulate`  | Bills every day from 2022-01-01 to 2022-02-01 against the live API |
+| `npm test`          | Runs the Vitest suite                                              |
+| `npm run typecheck` | Runs `tsc --noEmit`                                                |
+| `npm run lint`      | Runs ESLint                                                        |
+| `npm run format`    | Runs Prettier                                                      |
 
-`npm run runSimulation` prints one line per day (new advances, charges accepted/attempted, revenue still pending,
+`npm run simulate` prints one line per day (new advances, charges accepted/attempted, revenue still pending,
 completions), then a table per advance and the overall totals.
 
 ## Structure
@@ -60,7 +60,7 @@ For each simulated day, `runDailyBilling(today, { api, ledger })`:
    1. Queues every revenue date from the day before the start date up to yesterday that isn't queued yet.
    2. Fetches revenue for every pending date. A `530` leaves that date pending for tomorrow. Revenue that comes back
       adds `revenue × repayment_percentage / 100` to the amount due.
-   3. Charges `min(due, remainingBalance, 10000.00)` against the mandate. A `530` leaves the amount due for tomorrow.
+   3. Charges `min(due, remaining, 10000.00)` against the mandate. A `530` leaves the amount due for tomorrow.
    4. When nothing remains, calls `billing_complete` once and stops processing that advance.
 3. Returns a `DaySummary` of what happened.
 
