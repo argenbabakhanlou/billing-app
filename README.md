@@ -108,30 +108,42 @@ VITE_API_BASE_URL=/api
 
 Binding the ledger:
 
-````ts
+```ts
 // React
 const ledger = createBillingLedger();
 const snapshot = useSyncExternalStore(ledger.subscribe, ledger.snapshot);
-
+```
 
 Run a simulation from a view and show progress:
 
 ```ts
 await runSimulation({ deps: { api: billingApi, ledger }, onDay: (day) => days.push(day) });
-````
+```
 
 ## Known gaps / TODOs
 
-- **No retries for unexpected errors.** Only `530` is treated as retryable. Any other error stops the run, since the
-  exercise assumes a reliable environment. If `billing_complete` fails, the next run retries it, because the advance
-  is still repaid but not marked complete.
-- **No runtime validation of API responses.** Adding a schema check (for example zod) at `services/api` would catch
-  unexpected response shapes.
-- **Calls are sequential.** Advances are billed one after another. Billing them in parallel per advance would speed up
-  large runs.
-- **Unneeded revenue calls.** Revenue is still fetched when the amount due already covers the remaining balance.
-- **Nothing persists.** Ledger state is lost when the process exits.
-- **Percentages must be whole numbers.** `repayment_percentage` is assumed to be an integer, and a fractional value
-  throws.
-- **Mandates aren't capped together.** The cap is per advance, as the spec states. Two advances sharing a mandate can
-  together be charged more than 10,000.00 against that mandate in a day.
+1. **No retries for unexpected errors.** Only `530` is retried. Any other failure aborts the whole run, since the
+   exercise assumes a reliable environment.
+   _Fix:_ wrap `apiRequest` in a retry with exponential backoff for 5xx and network errors, capped at a few attempts.
+2. **A failed day stops the simulation.** One bad response ends the loop, so later days are never billed.
+   _Fix:_ catch per advance inside `runDailyBilling`, record the failure on the `DaySummary`, and carry on. Unbilled
+   revenue and due amounts already roll forward on their own.
+3. **No runtime validation of API responses.** A changed or malformed payload surfaces as a confusing error deep in
+   the billing logic.
+   _Fix:_ parse responses with a schema (for example zod) in `services/api` and fail with a clear message at the edge.
+4. **Calls are sequential.** Advances are billed one after another, so a long period is slower than it needs to be.
+   _Fix:_ bill advances concurrently with `Promise.all`, since each advance has its own state; keep the per-advance
+   steps in order.
+5. **Unneeded revenue calls.** Revenue is still fetched when the amount already due covers the remaining balance.
+   _Fix:_ skip `fetchRevenue` when `due >= remainingBalance(entry)`, and resume if a charge is later rejected.
+6. **Nothing persists.** Ledger state is lost when the process exits, so an interrupted run restarts from scratch.
+   _Fix:_ add a storage interface behind the ledger (JSON file, SQLite or a real database) and reload it on startup.
+7. **Percentages must be whole numbers.** `applyPercentage` throws on a fractional `repayment_percentage`.
+   _Fix:_ scale the percentage to basis points before dividing, keeping the arithmetic in integers.
+8. **Mandates aren't capped together.** The cap is per advance, as the spec states, so two advances sharing a mandate
+   can together exceed 10,000.00 against it in a day.
+   _Fix:_ if that is ever required, track charges per mandate per day in the ledger and cap against that total.
+9. **A simulation can't be cancelled.** `runSimulation` runs to the end, which a UI would need to interrupt.
+   _Fix:_ accept an `AbortSignal` and check it between days.
+10. **No structured output.** The CLI prints for humans only, so runs can't be diffed or checked automatically.
+    _Fix:_ add a `--json` flag that writes the day summaries and final ledger as JSON.
